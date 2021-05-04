@@ -1,0 +1,19 @@
+{
+  "source": "NotificationRepeater",
+  "applications": [
+    {
+      "app_key": "NotificationRepeater",
+      "launch_type": "binary",
+      "binary_path_windows": "..\\VRNotificationRepeater.exe",
+      "arguments": "run --hide-window",
+      "is_dashboard_overlay": true,
+      "strings": {
+        "en_us": {
+          "name": "NotificationRepeater",
+          "description": "description"
+        }
+      }
+    }
+  ]
+}
+
