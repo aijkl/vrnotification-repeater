@@ -45,8 +45,8 @@ namespace Aijkl.VR.NotificationRepeater
         public const string Error = "An error has occurred";
         public string GetValue(string memberName)
         {
-            Dictionary<string, string> keyValuePairs = (Dictionary<string, string>)GetType().GetProperty(memberName, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)?.GetValue(this);
-            if (keyValuePairs.TryGetValue(CultureInfo.CurrentCulture.TwoLetterISOLanguageName, out string value))
+            var keyValuePairs = (Dictionary<string, string>)GetType().GetProperty(memberName, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)?.GetValue(this);
+            if (keyValuePairs.TryGetValue(CultureInfo.CurrentCulture.TwoLetterISOLanguageName, out var value))
             {
                 return value;
             }

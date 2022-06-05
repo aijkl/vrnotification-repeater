@@ -11,12 +11,12 @@ namespace Aijkl.VR.NotificationRepeater.Commands
     {
         public override int Execute(CommandContext context)
         {
-            AppSettings appSettings = AppSettings.LoadFromFile();
+            var appSettings = AppSettings.LoadFromFile();
 
             try
             {
-                CvrSystemWrapper cvrSystemHelper = new CvrSystemWrapper(EVRApplicationType.VRApplication_Utility);
-                EVRApplicationError vrApplicationError = cvrSystemHelper.CvrApplications.RemoveApplicationManifest(Path.GetFullPath(appSettings.ApplicationManifestPath));
+                var cvrSystemHelper = new CvrSystemWrapper(EVRApplicationType.VRApplication_Utility);
+                var vrApplicationError = cvrSystemHelper.CvrApplications.RemoveApplicationManifest(Path.GetFullPath(appSettings.ApplicationManifestPath));
                 AnsiConsoleHelper.MarkupLine(appSettings.LanguageDataSet.GetValue(vrApplicationError == EVRApplicationError.None ? nameof(LanguageDataSet.StreamVRRemoveManifestSuccess) : nameof(LanguageDataSet.StreamVRRemoveManifestFailure)), vrApplicationError == EVRApplicationError.None ? AnsiConsoleHelper.State.Success : AnsiConsoleHelper.State.Failure);
             }
             catch (Exception ex)

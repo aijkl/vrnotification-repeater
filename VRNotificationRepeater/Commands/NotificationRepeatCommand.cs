@@ -47,8 +47,8 @@ namespace Aijkl.VR.NotificationRepeater.Commands
         {
             LoadSettingFile();
 
-            UserNotificationListener userNotificationListener = UserNotificationListener.Current;
-            UserNotificationListenerAccessStatus userNotificationListenerAccessStatus = userNotificationListener.GetAccessStatus();
+            var userNotificationListener = UserNotificationListener.Current;
+            var userNotificationListenerAccessStatus = userNotificationListener.GetAccessStatus();
             if (userNotificationListenerAccessStatus != UserNotificationListenerAccessStatus.Allowed)
             {
                 AnsiConsole.WriteLine(_appSettings.LanguageDataSet.GetValue(nameof(LanguageDataSet.NotificationAccessDenied)));
@@ -63,7 +63,7 @@ namespace Aijkl.VR.NotificationRepeater.Commands
            
             while (!_cancellationTokenSource.Token.IsCancellationRequested)
             {
-                IReadOnlyList<UserNotification> userNotifications = await userNotificationListener.GetNotificationsAsync(NotificationKinds.Toast);
+                var userNotifications = await userNotificationListener.GetNotificationsAsync(NotificationKinds.Toast);
 
                 if (userNotifications.Count != 0)
                 {
@@ -78,7 +78,7 @@ namespace Aijkl.VR.NotificationRepeater.Commands
                     {
                         foreach (var notification in userNotifications.Where(x => _cachedUserNotifications.All(y => y.Id != x.Id)))
                         {
-                            IReadOnlyList<AdaptiveNotificationText> notificationTexts = notification.Notification.Visual.GetBinding(KnownNotificationBindings.ToastGeneric).GetTextElements();
+                            var notificationTexts = notification.Notification.Visual.GetBinding(KnownNotificationBindings.ToastGeneric).GetTextElements();
                             if (notificationTexts[0] != null && notificationTexts[1] != null && !string.IsNullOrEmpty(notificationTexts[1].Text))
                             {
                                 _xsNotifier.SendNotification(new XSNotification()
@@ -106,7 +106,7 @@ namespace Aijkl.VR.NotificationRepeater.Commands
                 {
                     _cvrSystemWrapper = new CvrSystemWrapper();
 
-                    EVROverlayError vrOverlayError = OpenVR.Overlay.CreateOverlay(Guid.NewGuid().ToString(), _appSettings.ApplicationID, ref _overlayWindowHandle);
+                    var vrOverlayError = OpenVR.Overlay.CreateOverlay(Guid.NewGuid().ToString(), _appSettings.ApplicationID, ref _overlayWindowHandle);
                     if (vrOverlayError != EVROverlayError.None)
                     {
                         throw new Exception($"{nameof(EVROverlayError)} {vrOverlayError}");
@@ -126,7 +126,7 @@ namespace Aijkl.VR.NotificationRepeater.Commands
             try
             {
                 _appSettings = AppSettings.LoadFromFile();
-                Table table = new Table();
+                var table = new Table();
                 table.AddColumn("PropertyName");
                 table.AddColumn("Value");
                 foreach (var item in _appSettings.GetType().GetProperties())
@@ -147,7 +147,7 @@ namespace Aijkl.VR.NotificationRepeater.Commands
         private void ConnectToXsOverlay()
         {
             Exception cachedException = null;
-            for (int i = 0; i < _appSettings.XSOverlayConnectRetryCount; i++)
+            for (var i = 0; i < _appSettings.XSOverlayConnectRetryCount; i++)
             {
 
                 try

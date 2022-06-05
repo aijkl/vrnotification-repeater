@@ -21,12 +21,12 @@ namespace Aijkl.VR.NotificationRepeater.Wrappers
         };
         internal static void Markup(string text, State state = State.Info)
         {
-            if (!ColorMap.TryGetValue(state, out Color color)) return;
+            if (!ColorMap.TryGetValue(state, out var color)) return;
             AnsiConsole.Markup($" [[[rgb({color.R},{color.G},{color.B})]]]{state}[/] {text}");
         }
         internal static void MarkupLine(string text, State state = State.Info)
         {
-            if (!ColorMap.TryGetValue(state, out Color color)) return;
+            if (!ColorMap.TryGetValue(state, out var color)) return;
             AnsiConsole.MarkupLine($" [[[rgb({color.R},{color.G},{color.B})]{state}[/]]] {text}");
         }
     }

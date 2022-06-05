@@ -21,7 +21,7 @@ namespace Aijkl.VR.NotificationRepeater.Wrappers
         {
             _eventLoopCancellationTokenSource = new CancellationTokenSource();
 
-            EVRInitError evrInitError = new EVRInitError();
+            var evrInitError = new EVRInitError();
             _cvrSystem = OpenVR.Init(ref evrInitError, vrApplicationType);
             if (evrInitError != EVRInitError.None) throw new Exception(evrInitError.ToString());
         }
@@ -50,19 +50,19 @@ namespace Aijkl.VR.NotificationRepeater.Wrappers
         }
         public string GetRegisteredDeviceType(uint idx)
         {
-            return GetPropertyString(idx, ETrackedDeviceProperty.Prop_RegisteredDeviceType_String, out string result) ? result : string.Empty;
+            return GetPropertyString(idx, ETrackedDeviceProperty.Prop_RegisteredDeviceType_String, out var result) ? result : string.Empty;
         }
         public List<uint> GetDeviceIndexListByRegisteredDeviceType(string name)
         {
-            List<uint> devices = new List<uint>();
+            var devices = new List<uint>();
 
-            int connectedDeviceNum = GetConnectedDevicesCount();
+            var connectedDeviceNum = GetConnectedDevicesCount();
             uint connectedDeviceCount = 0;
             for (uint i = 0; i < OpenVR.k_unMaxTrackedDeviceCount; i++)
             {
                 if (IsDeviceConnected(i))
                 {
-                    string res = GetRegisteredDeviceType(i);
+                    var res = GetRegisteredDeviceType(i);
                     if (res != null)
                     {
                         if (res.Contains(name))
@@ -81,8 +81,8 @@ namespace Aijkl.VR.NotificationRepeater.Wrappers
         }
         public float GetControllerBatteryRemainingAmount(ETrackedControllerRole role)
         {
-            uint index = CvrSystem.GetTrackedDeviceIndexForControllerRole(role);
-            if (GetPropertyFloat(index, ETrackedDeviceProperty.Prop_DeviceBatteryPercentage_Float, out float result))
+            var index = CvrSystem.GetTrackedDeviceIndexForControllerRole(role);
+            if (GetPropertyFloat(index, ETrackedDeviceProperty.Prop_DeviceBatteryPercentage_Float, out var result))
             {
                 return result * 100.0f;
             }
@@ -94,7 +94,7 @@ namespace Aijkl.VR.NotificationRepeater.Wrappers
         }
         public float GetTrackerBatteryRemainingAmount(uint index)
         {
-            if (GetPropertyFloat(index, ETrackedDeviceProperty.Prop_DeviceBatteryPercentage_Float, out float result))
+            if (GetPropertyFloat(index, ETrackedDeviceProperty.Prop_DeviceBatteryPercentage_Float, out var result))
             {
                 return result * 100.0f;
             }
@@ -103,13 +103,13 @@ namespace Aijkl.VR.NotificationRepeater.Wrappers
         public bool GetPropertyString(uint idx, ETrackedDeviceProperty prop, out string result)
         {
             result = null;
-            ETrackedPropertyError error = new ETrackedPropertyError();
-            uint size = CvrSystem.GetStringTrackedDeviceProperty(idx, prop, null, 0, ref error);
+            var error = new ETrackedPropertyError();
+            var size = CvrSystem.GetStringTrackedDeviceProperty(idx, prop, null, 0, ref error);
             if (error != ETrackedPropertyError.TrackedProp_BufferTooSmall)
             {
                 return false;
             }
-            StringBuilder s = new StringBuilder((int)size);
+            var s = new StringBuilder((int)size);
             s.Length = (int)size;
             CvrSystem.GetStringTrackedDeviceProperty(idx, prop, s, size, ref error);
 
@@ -118,7 +118,7 @@ namespace Aijkl.VR.NotificationRepeater.Wrappers
         }
         public bool GetPropertyFloat(uint idx, ETrackedDeviceProperty prop, out float result)
         {
-            ETrackedPropertyError error = new ETrackedPropertyError();
+            var error = new ETrackedPropertyError();
             result = CvrSystem.GetFloatTrackedDeviceProperty(idx, prop, ref error);
             return (error == ETrackedPropertyError.TrackedProp_Success);
         }
@@ -137,8 +137,8 @@ namespace Aijkl.VR.NotificationRepeater.Wrappers
                 {
                     if (IsReady())
                     {
-                        List<VREvent_t> vrEvents = new List<VREvent_t>();
-                        VREvent_t vrEvent = new VREvent_t();
+                        var vrEvents = new List<VREvent_t>();
+                        var vrEvent = new VREvent_t();
                         while (CvrSystem.PollNextEvent(ref vrEvent, (uint)Marshal.SizeOf(vrEvent)))
                         {
                             vrEvents.Add(vrEvent);
@@ -156,7 +156,7 @@ namespace Aijkl.VR.NotificationRepeater.Wrappers
         }
         private int GetConnectedDevicesCount()
         {
-            int connectedDevices = 0;
+            var connectedDevices = 0;
             for (uint i = 0; i < OpenVR.k_unMaxTrackedDeviceCount; i++)
             {
                 if (IsDeviceConnected(i))
