@@ -17,7 +17,7 @@ namespace Aijkl.VR.NotificationRepeater.Commands
             {
                 var cvrSystemHelper = new CvrSystemWrapper(EVRApplicationType.VRApplication_Utility);
                 var vrApplicationError = cvrSystemHelper.CvrApplications.AddApplicationManifest(Path.GetFullPath(appSettings.ApplicationManifestPath), false);
-                AnsiConsoleHelper.MarkupLine($"{(appSettings.LanguageDataSet.GetValue(vrApplicationError == EVRApplicationError.None ? nameof(LanguageDataSet.StreamVRAddManifestSuccess) : nameof(LanguageDataSet.StreamVRAddManifestFailure)), vrApplicationError == EVRApplicationError.None ? AnsiConsoleWrappper.State.Success : AnsiConsoleWrappper.State.Failure)}", vrApplicationError == EVRApplicationError.None ? AnsiConsoleWrappper.State.Success : AnsiConsoleWrappper.State.Failure);
+                AnsiConsoleHelper.MarkupLine($"{(appSettings.LanguageDataSet.GetValue(vrApplicationError == EVRApplicationError.None ? nameof(LanguageDataSet.StreamVRAddManifestSuccess) : nameof(LanguageDataSet.StreamVRAddManifestFailure)), vrApplicationError == EVRApplicationError.None ? AnsiConsoleHelper.State.Success : AnsiConsoleHelper.State.Failure)}", vrApplicationError == EVRApplicationError.None ? AnsiConsoleHelper.State.Success : AnsiConsoleHelper.State.Failure);
                 if (vrApplicationError != (int)EVREventType.VREvent_None)
                 {
                     AnsiConsoleHelper.MarkupLine(vrApplicationError.ToString(), AnsiConsoleHelper.State.Failure);

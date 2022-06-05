@@ -144,7 +144,7 @@ namespace Aijkl.VR.NotificationRepeater.Wrappers
                             vrEvents.Add(vrEvent);
                         }
 
-                        CvrEvent?.Invoke(this, new CvrEventArgs(vrEvents));
+                        CvrEvent?.Invoke(this, new CVREventArgs(vrEvents));
                     }
                     Thread.Sleep(200);
                 }
