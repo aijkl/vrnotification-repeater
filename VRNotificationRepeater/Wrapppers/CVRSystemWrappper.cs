@@ -6,66 +6,43 @@ using System.Threading;
 using System.Threading.Tasks;
 using Valve.VR;
 
-namespace Aijkl.VR.NotificationRepeater.Wrapppers
+namespace Aijkl.VR.NotificationRepeater.Wrappers
 {
-    public class CVRSystemWrappper : IDisposable
+    public class CvrSystemWrapper : IDisposable
     {
         private CVRSystem _cvrSystem;
         private CVRApplications _cvrApplications;
         private CVRNotifications _cvrNotifications;
-        private CancellationTokenSource eventLoopCancellationTokenSource;
+        private CancellationTokenSource _eventLoopCancellationTokenSource;
 
-        public event EventHandler<CVREventArgs> CVREvent;
+        public event EventHandler<CVREventArgs> CvrEvent;
 
-        public CVRSystemWrappper(EVRApplicationType vrApplicationType = EVRApplicationType.VRApplication_Overlay)
+        public CvrSystemWrapper(EVRApplicationType vrApplicationType = EVRApplicationType.VRApplication_Overlay)
         {
-            eventLoopCancellationTokenSource = new CancellationTokenSource();
+            _eventLoopCancellationTokenSource = new CancellationTokenSource();
 
             EVRInitError evrInitError = new EVRInitError();
             _cvrSystem = OpenVR.Init(ref evrInitError, vrApplicationType);
             if (evrInitError != EVRInitError.None) throw new Exception(evrInitError.ToString());
         }
-        public CVRNotifications CVRNotifications
+        public CVRNotifications CvrNotifications
         {
-            set
-            {
-                _cvrNotifications = value;
-            }
-            get
-            {
-                if(_cvrNotifications == null)
-                {
-                    _cvrNotifications = OpenVR.Notifications;
-                }
-                return _cvrNotifications;
-            }
+            set => _cvrNotifications = value;
+            get { return _cvrNotifications ??= OpenVR.Notifications; }
         }
-        public CVRApplications CVRApplications
+        public CVRApplications CvrApplications
         {
-            set
-            {
-                _cvrApplications = value;
-            }
+            set => _cvrApplications = value;
             get
             {
                 _cvrApplications = OpenVR.Applications;
                 return _cvrApplications;
             }
         }
-        public CVRSystem CVRSystem
+        public CVRSystem CvrSystem
         {
-            set
-            {
-                _cvrSystem = value;
-            }
-            get
-            {
-                if (_cvrSystem == null)
-                {
-                    _cvrSystem =  OpenVR.System;
-                }
-                return _cvrSystem;
-            }
+            set => _cvrSystem = value;
+            get => _cvrSystem ??= OpenVR.System;
         }
         public List<uint> GetViveTrackerIndexs()
         {
@@ -73,11 +50,7 @@ namespace Aijkl.VR.NotificationRepeater.Wrapppers
         }
         public string GetRegisteredDeviceType(uint idx)
         {
-            if (GetPropertyString(idx, ETrackedDeviceProperty.Prop_RegisteredDeviceType_String, out string result))
-            {
-                return result;
-            }
-            return string.Empty;
+            return GetPropertyString(idx, ETrackedDeviceProperty.Prop_RegisteredDeviceType_String, out string result) ? result : string.Empty;
         }
         public List<uint> GetDeviceIndexListByRegisteredDeviceType(string name)
         {
@@ -108,7 +81,7 @@ namespace Aijkl.VR.NotificationRepeater.Wrapppers
         }
         public float GetControllerBatteryRemainingAmount(ETrackedControllerRole role)
         {
-            uint index = CVRSystem.GetTrackedDeviceIndexForControllerRole(role);
+            uint index = CvrSystem.GetTrackedDeviceIndexForControllerRole(role);
             if (GetPropertyFloat(index, ETrackedDeviceProperty.Prop_DeviceBatteryPercentage_Float, out float result))
             {
                 return result * 100.0f;
@@ -117,7 +90,7 @@ namespace Aijkl.VR.NotificationRepeater.Wrapppers
         }
         public uint GetTrackedDeviceIndexForControllerRole(ETrackedControllerRole role)
         {
-            return CVRSystem.GetTrackedDeviceIndexForControllerRole(role);
+            return CvrSystem.GetTrackedDeviceIndexForControllerRole(role);
         }
         public float GetTrackerBatteryRemainingAmount(uint index)
         {
@@ -131,14 +104,14 @@ namespace Aijkl.VR.NotificationRepeater.Wrapppers
         {
             result = null;
             ETrackedPropertyError error = new ETrackedPropertyError();
-            uint size = CVRSystem.GetStringTrackedDeviceProperty(idx, prop, null, 0, ref error);
+            uint size = CvrSystem.GetStringTrackedDeviceProperty(idx, prop, null, 0, ref error);
             if (error != ETrackedPropertyError.TrackedProp_BufferTooSmall)
             {
                 return false;
             }
             StringBuilder s = new StringBuilder((int)size);
             s.Length = (int)size;
-            CVRSystem.GetStringTrackedDeviceProperty(idx, prop, s, size, ref error);
+            CvrSystem.GetStringTrackedDeviceProperty(idx, prop, s, size, ref error);
 
             result = s.ToString();
             return (error == ETrackedPropertyError.TrackedProp_Success);
@@ -146,32 +119,32 @@ namespace Aijkl.VR.NotificationRepeater.Wrapppers
         public bool GetPropertyFloat(uint idx, ETrackedDeviceProperty prop, out float result)
         {
             ETrackedPropertyError error = new ETrackedPropertyError();
-            result = CVRSystem.GetFloatTrackedDeviceProperty(idx, prop, ref error);
+            result = CvrSystem.GetFloatTrackedDeviceProperty(idx, prop, ref error);
             return (error == ETrackedPropertyError.TrackedProp_Success);
         }
         public bool IsReady()
         {
-            return CVRSystem != null && CVRApplications != null;
+            return CvrSystem != null && CvrApplications != null;
         }
         public void BeginEventLoop()
         {
-            if (!eventLoopCancellationTokenSource.IsCancellationRequested) eventLoopCancellationTokenSource.Cancel();
+            if (!_eventLoopCancellationTokenSource.IsCancellationRequested) _eventLoopCancellationTokenSource.Cancel();
 
-            eventLoopCancellationTokenSource = new CancellationTokenSource();
+            _eventLoopCancellationTokenSource = new CancellationTokenSource();
             Task.Run(() =>
             {
-                while (!eventLoopCancellationTokenSource.IsCancellationRequested)
+                while (!_eventLoopCancellationTokenSource.IsCancellationRequested)
                 {
                     if (IsReady())
                     {
                         List<VREvent_t> vrEvents = new List<VREvent_t>();
                         VREvent_t vrEvent = new VREvent_t();
-                        while (CVRSystem.PollNextEvent(ref vrEvent, (uint)Marshal.SizeOf(vrEvent)))
+                        while (CvrSystem.PollNextEvent(ref vrEvent, (uint)Marshal.SizeOf(vrEvent)))
                         {
                             vrEvents.Add(vrEvent);
                         }
 
-                        CVREvent?.Invoke(this, new CVREventArgs(vrEvents));
+                        CvrEvent?.Invoke(this, new CvrEventArgs(vrEvents));
                     }
                     Thread.Sleep(200);
                 }
@@ -179,7 +152,7 @@ namespace Aijkl.VR.NotificationRepeater.Wrapppers
         }
         public void StopLoop()
         {
-            if (eventLoopCancellationTokenSource?.IsCancellationRequested != true) eventLoopCancellationTokenSource.Cancel();
+            if (_eventLoopCancellationTokenSource?.IsCancellationRequested != true) _eventLoopCancellationTokenSource.Cancel();
         }
         private int GetConnectedDevicesCount()
         {
@@ -195,13 +168,12 @@ namespace Aijkl.VR.NotificationRepeater.Wrapppers
         }
         private bool IsDeviceConnected(uint idx)
         {
-            if (!IsReady()) { return false; }
-            return CVRSystem.IsTrackedDeviceConnected(idx);
+            return IsReady() && CvrSystem.IsTrackedDeviceConnected(idx);
         }
         public void Dispose()
         {
             StopLoop();
-            eventLoopCancellationTokenSource.Dispose();
+            _eventLoopCancellationTokenSource.Dispose();
         }
     }
 }

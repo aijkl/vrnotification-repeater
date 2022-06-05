@@ -1,34 +1,32 @@
 ﻿using Spectre.Console;
 using System.Collections.Generic;
 
-namespace Aijkl.VR.NotificationRepeater.Wrapppers
+namespace Aijkl.VR.NotificationRepeater.Wrappers
 {
-    public static class AnsiConsoleWrappper
+    internal static class AnsiConsoleHelper
     {
-        public enum State
+        internal enum State
         {
             Success,
             Failure,
-            Info
+            Info,
+            Warning
         }
-        public static void WrapMarkup(string text, State state)
+        private static readonly Dictionary<State, Color> ColorMap = new()
         {
-            Dictionary<State, Color> colorMap = new Dictionary<State, Color>();
-            colorMap.Add(State.Success, Color.Green1);
-            colorMap.Add(State.Info, Color.Purple3);
-            colorMap.Add(State.Failure, Color.Red1);
-
-            if (!colorMap.TryGetValue(state, out Color color)) return;
+            { State.Success, Color.Green1 },
+            { State.Info, Color.Grey46 },
+            { State.Failure, Color.Red1 },
+            { State.Warning, Color.Yellow },
+        };
+        internal static void Markup(string text, State state = State.Info)
+        {
+            if (!ColorMap.TryGetValue(state, out Color color)) return;
             AnsiConsole.Markup($" [[[rgb({color.R},{color.G},{color.B})]]]{state}[/] {text}");
         }
-        public static void WrapMarkupLine(string text, State state)
+        internal static void MarkupLine(string text, State state = State.Info)
         {
-            Dictionary<State, Color> colorMap = new Dictionary<State, Color>();
-            colorMap.Add(State.Success, Color.Green1);
-            colorMap.Add(State.Info, Color.Grey46);
-            colorMap.Add(State.Failure, Color.Red1);
-
-            if (!colorMap.TryGetValue(state, out Color color)) return;
+            if (!ColorMap.TryGetValue(state, out Color color)) return;
             AnsiConsole.MarkupLine($" [[[rgb({color.R},{color.G},{color.B})]{state}[/]]] {text}");
         }
     }

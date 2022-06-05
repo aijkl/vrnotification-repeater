@@ -12,7 +12,7 @@ namespace Aijkl.VR.NotificationRepeater
             {
                 x.AddCommand<NotificationRepeatCommand>("run");
                 x.AddCommand<RegisterCommand>("register");
-                x.AddCommand<DeRegisterCommand>("deregister");
+                x.AddCommand<UnRegisterCommand>("deregister");
             });
             return commandApp.Run(args);
         }

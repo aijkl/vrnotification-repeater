@@ -1,4 +1,4 @@
-﻿using Aijkl.VR.NotificationRepeater.Wrapppers;
+﻿using Aijkl.VR.NotificationRepeater.Wrappers;
 using Spectre.Console;
 using Spectre.Console.Cli;
 using System;
@@ -15,17 +15,17 @@ namespace Aijkl.VR.NotificationRepeater.Commands
 
             try
             {
-                CVRSystemWrappper cvrSystemhelper = new CVRSystemWrappper(EVRApplicationType.VRApplication_Utility);
-                EVRApplicationError vrApplicationError = cvrSystemhelper.CVRApplications.AddApplicationManifest(Path.GetFullPath(appSettings.ApplicationManifestPath), false);
-                AnsiConsoleWrappper.WrapMarkupLine($"{(appSettings.LanguageDataSet.GetValue(vrApplicationError == EVRApplicationError.None ? nameof(LanguageDataSet.StreamVRAddManifestSuccess) : nameof(LanguageDataSet.StreamVRAddManifestFailure)), vrApplicationError == EVRApplicationError.None ? AnsiConsoleWrappper.State.Success : AnsiConsoleWrappper.State.Failure)}", vrApplicationError == EVRApplicationError.None ? AnsiConsoleWrappper.State.Success : AnsiConsoleWrappper.State.Failure);
+                CvrSystemWrapper cvrSystemHelper = new CvrSystemWrapper(EVRApplicationType.VRApplication_Utility);
+                EVRApplicationError vrApplicationError = cvrSystemHelper.CvrApplications.AddApplicationManifest(Path.GetFullPath(appSettings.ApplicationManifestPath), false);
+                AnsiConsoleHelper.MarkupLine($"{(appSettings.LanguageDataSet.GetValue(vrApplicationError == EVRApplicationError.None ? nameof(LanguageDataSet.StreamVRAddManifestSuccess) : nameof(LanguageDataSet.StreamVRAddManifestFailure)), vrApplicationError == EVRApplicationError.None ? AnsiConsoleWrappper.State.Success : AnsiConsoleWrappper.State.Failure)}", vrApplicationError == EVRApplicationError.None ? AnsiConsoleWrappper.State.Success : AnsiConsoleWrappper.State.Failure);
                 if (vrApplicationError != (int)EVREventType.VREvent_None)
                 {
-                    AnsiConsoleWrappper.WrapMarkupLine(vrApplicationError.ToString(), AnsiConsoleWrappper.State.Failure);
+                    AnsiConsoleHelper.MarkupLine(vrApplicationError.ToString(), AnsiConsoleHelper.State.Failure);
                 }
             }
             catch (Exception ex)
             {
-                AnsiConsoleWrappper.WrapMarkupLine(appSettings.LanguageDataSet.GetValue(nameof(LanguageDataSet.StreamVRAddManifestFailure)), AnsiConsoleWrappper.State.Failure);
+                AnsiConsoleHelper.MarkupLine(appSettings.LanguageDataSet.GetValue(nameof(LanguageDataSet.StreamVRAddManifestFailure)), AnsiConsoleHelper.State.Failure);
                 AnsiConsole.WriteException(ex);
                 return 1;
             }

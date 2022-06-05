@@ -17,14 +17,14 @@ namespace Aijkl.VR.NotificationRepeater
         [JsonProperty("applicationManifestPath")]
         public string ApplicationManifestPath { set; get; }
 
-        [JsonProperty("notificationCheackIntervalMiliSecond")]
-        public int NotificationCheackIntervalMiliSecond { set; get; }
+        [JsonProperty("notificationCheckIntervalMilliSecond")]
+        public int NotificationCheckIntervalMilliSecond { set; get; }
 
         [JsonProperty("xsOverlayConnectRetryCount")]
         public int XSOverlayConnectRetryCount { set; get; }
 
-        [JsonProperty("xsOverlayConnectRetryIntervalMiliSeocond")]
-        public int XSOverlayConnectRetryIntervalMiliSeocond { set; get; }
+        [JsonProperty("xsOverlayConnectRetryIntervalMilliSecond")]
+        public int XSOverlayConnectRetryIntervalMilliSecond { set; get; }
 
         [JsonProperty("languageDataSet")]
         public LanguageDataSet LanguageDataSet { set; get; }
@@ -41,21 +41,19 @@ namespace Aijkl.VR.NotificationRepeater
 
     public class LanguageDataSet
     {
-        public const string CONFIGURE_FILE_ERROR = "Configuration file error";
-        public const string ERROR = "An error has occurred";
+        public const string ConfigureFileError = "Configuration file error";
+        public const string Error = "An error has occurred";
         public string GetValue(string memberName)
         {
-            Dictionary<string, string> keyValuePairs = (Dictionary<string, string>)GetType().GetProperty(memberName, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance).GetValue(this);
+            Dictionary<string, string> keyValuePairs = (Dictionary<string, string>)GetType().GetProperty(memberName, System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)?.GetValue(this);
             if (keyValuePairs.TryGetValue(CultureInfo.CurrentCulture.TwoLetterISOLanguageName, out string value))
             {
                 return value;
             }
-            else
-            {
-                value = keyValuePairs.ToList().FirstOrDefault().Value;
-                value = string.IsNullOrEmpty(value) ? string.Empty : value;
-                return value;
-            }
+
+            value = keyValuePairs.ToList().FirstOrDefault().Value;
+            value = string.IsNullOrEmpty(value) ? string.Empty : value;
+            return value;
         }
 
         [JsonProperty("General.Configure")]
