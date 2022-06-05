@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Linq;
-using Aijkl.VR.NotificationRepeater.Wrapppers;
+using Aijkl.VR.NotificationRepeater.Wrappers;
 using Spectre.Console;
 using Spectre.Console.Cli;
 using Valve.VR;
@@ -19,12 +19,12 @@ namespace Aijkl.VR.NotificationRepeater.Commands
 {
     public class NotificationRepeatCommand : Command<NotificationRepeatCommandSettings>
     {                
-        private AppSettings appSettings;
-        private CancellationTokenSource cancellationTokenSource;
-        private CVRSystemWrappper cvrSystemWapper;
-        private XSNotifier xsNotifier = null;
-        private ulong overlayWindowHandle = 0;
-        private List<UserNotification> cachedUserNotifications;
+        private AppSettings _appSettings;
+        private CancellationTokenSource _cancellationTokenSource;
+        private CvrSystemWrapper _cvrSystemWrapper;
+        private XSNotifier _xsNotifier;
+        private ulong _overlayWindowHandle;
+        private List<UserNotification> _cachedUserNotifications;
 
         public override int Execute(CommandContext context, NotificationRepeatCommandSettings settings)
         {
@@ -35,7 +35,7 @@ namespace Aijkl.VR.NotificationRepeater.Commands
                     User32Methods.ShowWindow(Process.GetCurrentProcess().MainWindowHandle, 0);
                 }
 
-                return ExcuteAsync(context).Result;
+                return ExecuteAsync(context).Result;
             }
             catch (Exception ex)
             {
@@ -43,70 +43,70 @@ namespace Aijkl.VR.NotificationRepeater.Commands
                 throw;
             }
         }
-        private async Task<int> ExcuteAsync(CommandContext context)
+        private async Task<int> ExecuteAsync(CommandContext context)
         {
             LoadSettingFile();
 
-            UserNotificationListener userNotificationListener = UserNotificationListener.Current;
-            UserNotificationListenerAccessStatus userNotificationListenerAccessStatus = userNotificationListener.GetAccessStatus();
+            var userNotificationListener = UserNotificationListener.Current;
+            var userNotificationListenerAccessStatus = userNotificationListener.GetAccessStatus();
             if (userNotificationListenerAccessStatus != UserNotificationListenerAccessStatus.Allowed)
             {
-                AnsiConsole.WriteLine(appSettings.LanguageDataSet.GetValue(nameof(LanguageDataSet.NotificationAccessDenied)));
+                AnsiConsole.WriteLine(_appSettings.LanguageDataSet.GetValue(nameof(LanguageDataSet.NotificationAccessDenied)));
                 return 1;
             }
 
-            InitCVRSystemWrappper();
-            ConnectToXSOverlay();
+            InitCvrSystemWrapper();
+            ConnectToXsOverlay();
 
-            cancellationTokenSource = new CancellationTokenSource();
-            cachedUserNotifications = new List<UserNotification>();
+            _cancellationTokenSource = new CancellationTokenSource();
+            _cachedUserNotifications = new List<UserNotification>();
            
-            while (!cancellationTokenSource.Token.IsCancellationRequested)
+            while (!_cancellationTokenSource.Token.IsCancellationRequested)
             {
-                IReadOnlyList<UserNotification> userNotifications = await userNotificationListener.GetNotificationsAsync(NotificationKinds.Toast);
+                var userNotifications = await userNotificationListener.GetNotificationsAsync(NotificationKinds.Toast);
 
                 if (userNotifications.Count != 0)
                 {
-                    if (cachedUserNotifications.Count == 0)
+                    if (_cachedUserNotifications.Count == 0)
                     {
                         foreach (var userNotification in userNotifications)
                         {
-                            cachedUserNotifications.Add(userNotification);
+                            _cachedUserNotifications.Add(userNotification);
                         }                        
                     }
                     else
                     {
-                        foreach (var notification in userNotifications.Where(x => !cachedUserNotifications.Any(y => y.Id == x.Id)))
+                        foreach (var notification in userNotifications.Where(x => _cachedUserNotifications.All(y => y.Id != x.Id)))
                         {
-                            IReadOnlyList<AdaptiveNotificationText> notificationTexts = notification.Notification.Visual.GetBinding(KnownNotificationBindings.ToastGeneric).GetTextElements();
+                            var notificationTexts = notification.Notification.Visual.GetBinding(KnownNotificationBindings.ToastGeneric).GetTextElements();
                             if (notificationTexts[0] != null && notificationTexts[1] != null && !string.IsNullOrEmpty(notificationTexts[1].Text))
                             {
-                                xsNotifier.SendNotification(new XSNotification()
+                                _xsNotifier.SendNotification(new XSNotification()
                                 {
                                     MessageType = XSNotifications.Enum.XSMessageType.Notification,
                                     Title = notificationTexts[0].Text,
                                     Content = notificationTexts[1].Text
                                 });                                
                             }
-                            cachedUserNotifications.Add(notification);
+                            _cachedUserNotifications.Add(notification);
                         }
                     }
                 }
 
-                Thread.Sleep(appSettings.NotificationCheackIntervalMiliSecond);
+                Thread.Sleep(_appSettings.NotificationCheckIntervalMilliSecond);
             }
 
             return 0;
         }
-        private void InitCVRSystemWrappper()
+        private void InitCvrSystemWrapper()
         {
             try
             {
-                AnsiConsole.Status().Start(appSettings.LanguageDataSet.GetValue(nameof(LanguageDataSet.OpenVRInitializing)), action =>
+                AnsiConsole.Status().Start(_appSettings.LanguageDataSet.GetValue(nameof(LanguageDataSet.OpenVRInitializing)), action =>
                 {
-                    cvrSystemWapper = new CVRSystemWrappper();
+                    _cvrSystemWrapper = new CvrSystemWrapper();
 
-                    EVROverlayError vrOverlayError = OpenVR.Overlay.CreateOverlay(Guid.NewGuid().ToString(), appSettings.ApplicationID, ref overlayWindowHandle);
+                    var vrOverlayError = OpenVR.Overlay.CreateOverlay(Guid.NewGuid().ToString(), _appSettings.ApplicationID, ref _overlayWindowHandle);
                     if (vrOverlayError != EVROverlayError.None)
                     {
                         throw new Exception($"{nameof(EVROverlayError)} {vrOverlayError}");
@@ -115,56 +115,56 @@ namespace Aijkl.VR.NotificationRepeater.Commands
             }
             catch (Exception)
             {
-                AnsiConsole.WriteLine(appSettings.LanguageDataSet.GetValue(nameof(LanguageDataSet.OpenVRInitError)));
+                AnsiConsole.WriteLine(_appSettings.LanguageDataSet.GetValue(nameof(LanguageDataSet.OpenVRInitError)));
                 throw;
             }
-            cvrSystemWapper.CVREvent += CvrSystemWapper_CVREvent;
-            cvrSystemWapper.BeginEventLoop();
+            _cvrSystemWrapper.CvrEvent += CvrSystemWrapper_CVREvent;
+            _cvrSystemWrapper.BeginEventLoop();
         }
         private void LoadSettingFile()
         {
             try
             {
-                appSettings = AppSettings.LoadFromFile();
-                Table table = new Table();
+                _appSettings = AppSettings.LoadFromFile();
+                var table = new Table();
                 table.AddColumn("PropertyName");
                 table.AddColumn("Value");
-                foreach (var item in appSettings.GetType().GetProperties())
+                foreach (var item in _appSettings.GetType().GetProperties())
                 {
                     if (item.PropertyType == typeof(string))
                     {
-                        table.AddRow(item.Name, (string)item.GetValue(appSettings));
+                        table.AddRow(item.Name, (string)item.GetValue(_appSettings));
                     }
                 }
-                AnsiConsole.Render(table);
+                AnsiConsole.Write(table);
             }
             catch (Exception)
             {
-                AnsiConsole.WriteLine(LanguageDataSet.CONFIGURE_FILE_ERROR);
+                AnsiConsole.WriteLine(LanguageDataSet.ConfigureFileError);
                 throw;
             }
         }
-        private void ConnectToXSOverlay()
+        private void ConnectToXsOverlay()
         {
             Exception cachedException = null;
-            for (int i = 0; i < appSettings.XSOverlayConnectRetryCount; i++)
+            for (var i = 0; i < _appSettings.XSOverlayConnectRetryCount; i++)
             {
 
                 try
                 {
-                    xsNotifier = new XSNotifier();
+                    _xsNotifier = new XSNotifier();
                     return;
                 }
                 catch (Exception ex)
                 {
-                    AnsiConsole.WriteLine(appSettings.LanguageDataSet.GetValue(nameof(LanguageDataSet.XSOverlayConnectError)));
+                    AnsiConsole.WriteLine(_appSettings.LanguageDataSet.GetValue(nameof(LanguageDataSet.XSOverlayConnectError)));
                     cachedException = ex; 
                 }
-                Thread.Sleep(appSettings.XSOverlayConnectRetryIntervalMiliSeocond);
+                Thread.Sleep(_appSettings.XSOverlayConnectRetryIntervalMilliSecond);
             }
             throw cachedException;
         }
-        private void CvrSystemWapper_CVREvent(object sender, CVREventArgs e)
+        private void CvrSystemWrapper_CVREvent(object sender, CVREventArgs e)
         {
             foreach (var vrEvent in e.VREvents)
             {
@@ -172,7 +172,7 @@ namespace Aijkl.VR.NotificationRepeater.Commands
                 switch ((EVREventType)vrEvent.eventType)
                 {
                     case EVREventType.VREvent_Quit:
-                        cancellationTokenSource.Cancel();
+                        _cancellationTokenSource.Cancel();
                         break;
                 }
             }
